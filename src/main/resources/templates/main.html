@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title>增删改查</title>
+    <link rel="stylesheet" href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.min.css">
+    <style>
+        input.ng-invalid {
+            border: 1px solid red;
+        }
+        input.ng-valid {
+            border: 1px solid green;
+        }
+        tr.odd{
+            background: #f6f6f6;
+        }
+        tr.even{
+            background: #f0f0f0;
+        }
+        tr.actBg{
+            background: #dddddd;
+        }
+    </style>
+</head>
+<body ng-controller="ctrl">
+
+<div class="container" style="margin: 40px auto;">
+    <!--新增-->
+    <div class="row" style="border: 1px #ddd solid; padding: 10px 0;">
+        <div class="col-md-12">
+            <h2>新增信息</h2>
+            <form name="myForm" novalidate ng-submit="submitDate()">
+                <div class="form-group">
+                    <label for="Name">姓名（必填）老王不翻墙</label>
+                    <input type="text" class="form-control" id="Name" placeholder="Name" name="user" ng-model="user" required>
+                </div>
+                <div class="form-group">
+                    <label for="Phone">手机号（必填）13012365479</label>
+                    <input type="number" class="form-control" id="Phone" placeholder="Phone" name="phone" ng-model="phone" ng-minlength="11" ng-maxlength="11" required>
+                </div>
+                <div class="form-group">
+                    <label for="Email">邮箱（必填）123456789@qq.com</label>
+                    <input type="email" class="form-control" id="Email" placeholder="Email" name="email" ng-model="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="Url">微博地址（必填）http://www.laowang.com</label>
+                    <input type="url" class="form-control" id="Url" placeholder="Url" name="url" ng-model="url" required>
+                </div>
+                <div class="form-group">
+                    <p>性别：{{sex}}</p>
+                    <label class="radio-inline">
+                        <input type="radio" name="inlineRadioOptions" id="inlineRadio1" ng-model="sex" value="男生"> 男
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="inlineRadioOptions" id="inlineRadio2" ng-model="sex" value="女生"> 女
+                    </label>
+                </div>
+                <div class="form-group">
+                    <p>兴趣：{{selected}}--{{selectedTags}}--{{selectedObj}}</p>
+                    <p>已选(str)：{{strInterest}}</p>
+                    <label class="checkbox-inline" ng-repeat="it in interestData">
+                        <input type="checkbox" id="{{it.id}}" data-total="{{it.total}}" name="{{it.name}}"
+                               value="{{it.name}}" ng-checked="isSelected(it.id)"
+                               ng-click="updateSelection($event,it.id)"> {{it.name}}
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label> 家乡 </label>
+                    <select class="form-control" ng-model="hometown" name="hometown">
+                        <option ng-repeat="home in homeArr">{{home}}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <textarea class="form-control" name="state" rows="3" ng-model="state" placeholder="备注说明"></textarea>
+                </div>
+                <button type="submit" ng-disabled="myForm.$invalid" class="btn btn-success">提交</button>
+            </form>
+        </div>
+    </div>
+    <!--查询列表-->
+    <div class="row" style="border: 1px #ddd solid; padding: 20px 0;">
+        <div class="col-md-12">
+            <h2>查询列表</h2>
+            <div class="col-md-12" style="padding: 20px;">
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label> 显示条数 </label>
+                        <select class="form-control" ng-model="count" name="count">
+                            <option ng-repeat="page in pages">{{page}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-left: 30px;">
+                        <label for="SearchName"> 根据姓名筛选 : </label>
+                        <input type="text" class="form-control" id="SearchName" placeholder="SearchName" ng-model="SearchName">
+                    </div>
+                    <div class="form-group" style="margin-left: 50px;">
+                        <label for="SearchID"> 根据ID查询 : </label>
+                        <input type="text" class="form-control" id="SearchID" placeholder="SearchID" ng-model="Searchid">
+                    </div>
+                    <button type="button" class="btn btn-primary" ng-click="Search()">查询</button>
+                </div>
+            </div>
+            <p>已选择（传后台data）：{{choseArr}}</p>
+            <p>已选择（传后台data）：{{choseArrStr}}</p>
+            <p>根据Id删除选中：{{selectedId}}</p>
+            <p>
+                <button class="btn btn-primary" ng-click="BatchDelete()">批量删除</button>
+            </p>
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>
+                        <!--master:; arrData:遍历的数据-->
+                        全选 <input type="checkbox" ng-checked="isChecked" ng-model="master" ng-click="all(master,arrData)">
+                    </th>
+                    <th>序号<span ng-click="sortID=!sortID">--升降--</span></th>
+                    <th>ID</th>
+                    <th>姓名</th>
+                    <th>手机号</th>
+                    <th>邮箱</th>
+                    <th>微博地址</th>
+                    <th>性别</th>
+                    <th>兴趣</th>
+                    <th>家乡</th>
+                    <th>备注说明</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="item in arrData | limitTo:count | filter:SearchName | filter:SearchID | orderBy: 'id':sortID" ng-class-odd="{{odd}}" ng-class-even="{{even}}" ng-click="selectBg($index)" ng-class="{'actBg':$index==actI}">
+                    <td>
+                        <input id={{item}} type="checkbox" ng-model="x" ng-checked="master" ng-click="chk(item,x,$event)">
+                    </td>
+                    <td>{{$index+1}}</td>
+                    <td>{{item.id}}</td>
+                    <td>{{item.user}}</td>
+                    <td>{{item.phone}}</td>
+                    <td>{{item.email}}</td>
+                    <td>{{item.url}}</td>
+                    <td>{{item.sex}}</td>
+                    <td>{{item.interest}}</td>
+                    <td>{{item.hometown}}</td>
+                    <td>{{item.state}}</td>
+                    <td>
+                        <button type="button" class="btn btn-info" ng-click="Update(item.id)">修改</button>
+                        <button type="button" class="btn btn-danger" ng-click="Delete(item.id)">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="http://apps.bdimg.com/libs/angular.js/1.4.6/angular.min.js"></script>
+<script>
+    var app = angular.module('app', []);
+    app.controller('ctrl', ['$scope', '$http', '$window','$location', function ($scope, $http, $window,$location) {
+
+        //table背景色
+        $scope.odd = 'odd';
+        $scope.even = 'even';
+        $scope.selectBg = function(index){
+            $scope.actI = index;
+        };
+
+        //模拟数据
+       /* $scope.arrData = [
+            {
+                user: '张三',
+                id: '0321',
+                phone: '13058712458',
+                email: '762279415@qq.com',
+                url: 'http://www.test.com',
+                sex: '男',
+                interest: '旅游,运动',
+                hometown: '北京',
+                state: '备注说明1'
+            },
+            {
+                user: '李四',
+                id: '0284',
+                phone: '13058712424',
+                email: '762279415@qq.com',
+                url: 'http://www.test.com',
+                sex: '女',
+                interest: '旅游,运动',
+                hometown: '上海',
+                state: '备注说明2'
+            },
+            {
+                user: '王五',
+                id: '5497',
+                phone: '13058712427',
+                email: '762279415@qq.com',
+                url: 'http://www.test.com',
+                sex: '男',
+                interest: '旅游,运动',
+                hometown: '深圳',
+                state: '备注说明3'
+            },
+            {
+                user: '赵六',
+                id: '2347',
+                phone: '13058712491',
+                email: '762279415@qq.com',
+                url: 'http://www.test.com',
+                sex: '男',
+                interest: '旅游,运动',
+                hometown: '广州',
+                state: '备注说明4'
+            },
+            {
+                user: '田七',
+                id: '9528',
+                phone: '13058712443',
+                email: '762279415@qq.com',
+                url: 'http://www.test.com',
+                sex: '男',
+                interest: '旅游,运动',
+                hometown: '广西',
+                state: '备注说明5'
+            },
+            {
+                user: '八妹',
+                id: '4512',
+                phone: '13058712459',
+                email: '762279415@qq.com',
+                url: 'http://www.test.com',
+                sex: '女',
+                interest: '旅游,运动',
+                hometown: '海南',
+                state: '备注说明6'
+            },
+        ];*/
+
+        //家乡数据
+        $scope.homeArr = ['北京', '广西', '广州', '湖北', '上海', '海南'];
+
+        //显示条数
+        $scope.pages = [5, 10, 20, 50, 'All'];
+
+        //爱好数据
+        $scope.interestData = [
+            {id: 1, name: '爬山', total: '16次'},
+            {id: 2, name: '游泳', total: '10次'},
+            {id: 3, name: '购物', total: '15次'},
+            {id: 4, name: 'K歌', total: '17次'},
+            {id: 5, name: '汽车', total: '19次'},
+            {id: 6, name: '遛狗', total: '11次'},
+            {id: 7, name: '游戏', total: '16次'},
+            {id: 8, name: '电影', total: '12次'},
+        ];
+
+        //爱好多选
+        $scope.selected = [];//存放id
+        $scope.selectedTags = [];//存放name
+        $scope.selectedObj = [];//[{id:'',name:'',total:''}]
+        $scope.strInterest = '';//存放选择的数组转字符串
+        //根据id增删 -----参考： http://www.cnblogs.com/CheeseZH/
+        var updateSelected = function (action, id, name, total) {
+            if (action == 'add' && $scope.selected.indexOf(id) == -1) {
+                $scope.selected.push(id);
+                $scope.selectedTags.push(name);
+                //$scope.strInterest = $scope.selectedTags.join(',');
+                $scope.selectedObj.push({id: id, name: name, total: total});
+            }
+            if (action == 'remove' && $scope.selected.indexOf(id) != -1) {
+                var idx = $scope.selected.indexOf(id);//根据数组某个值删除
+                $scope.selected.splice(idx, 1);
+                $scope.selectedTags.splice(idx, 1);
+                $scope.selectedObj.splice(idx, 1);
+                //$scope.strInterest = $scope.strInterest.replace(name + ',','');//取消选中
+            }
+            $scope.strInterest = $scope.selectedTags.join(',');//转str
+            //console.log($scope.strInterest);
+        };
+        $scope.updateSelection = function ($event, id) {
+            var checkbox = $event.target;//获取当前this
+            var action = (checkbox.checked ? 'add' : 'remove');
+            updateSelected(action, id, checkbox.name, checkbox.dataset.total);//xxx.dataset.total读取data-total=''
+        };
+        $scope.isSelected = function (id) {
+            return $scope.selected.indexOf(id) >= 0; // -1>+=0 false
+        };
+
+        //新增数据
+        $scope.submitDate = function () {
+            if ($scope.myForm.$valid) {
+                // 正常提交
+                console.log('valid');
+                var inputDate = {
+                    user: $scope.user,
+                    id: /*Math.round((Math.random() * 10) * (Math.random() * 10) * 6)*/$scope.id,
+                    phone: $scope.phone,
+                    email: $scope.email,
+                    url: $scope.url,
+                    sex: $scope.sex,
+                    interest: $scope.strInterest,
+                    hometown: $scope.hometown,
+                    state: $scope.state
+                };
+                $scope.arrData.unshift(inputDate);
+                alert('新增成功');
+                //http服务:post/get
+                /*$http.post('url',inputDate).success(function (res) {
+                 //成功
+                 }).error(function (err) {
+                 //失败
+                 });
+                 $http.get('url',{params:inputDate}).success(function (res) {
+                 //成功
+                 }).error(function (err) {
+                 //失败
+                 });*/
+            } else {
+                console.log('invalid');
+            }
+        };
+
+        //按ID升降排序
+        $scope.sortID = 0;
+
+        //按ID查询
+        $scope.Search = function () {
+            $scope.SearchID = $scope.Searchid;
+        };
+
+        //按ID修改
+        $scope.Update = function (id) {
+            console.log(id);
+            //可根据页面url传值 url?id=123, ---$location.search(id)获取
+            //传当前id后台查询更新
+            /*$http.post('url',{id:id}).success(function(res){})*/
+        };
+
+        //按ID删除
+        $scope.Delete = function (id) {
+            if (id) {
+                var con = $window.confirm("确定要删除吗?");
+                if (con == true) {
+                    alert("$http服务传当前id后台删除");
+                    //传当前id后台删除
+                } else {
+                    alert("不删除");
+                }
+            }
+        };
+
+        //多选批量删除----参考：http://www.cnblogs.com/wohenxion/p/4624218.html
+        $scope.choseArr = [];//定义数组用于存放前端显示
+        $scope.choseArrStr = [];//定义数组用于存放前端显示
+        var str = "";//字符串
+        var flag = '';//是否点击了全选，是为a
+        $scope.x = false;//默认未选中
+        $scope.selectedId = [];//存放id
+        $scope.all = function (c, v) {//全选
+            console.log(c);
+            if (c == true) {
+                $scope.x = true;
+                //$scope.choseArrStr = v;
+                //var objs =[{a:1},{a:2}];
+                //v：传入的数据
+                angular.forEach(v, function (data, index, array) {
+                    //data等价于array[index]
+                    //console.log(data.a+'='+array[index].a);
+                    //console.log(data.id);
+                    //console.log(array);
+                    if ($scope.selectedId.indexOf(data.id) == -1) {
+                        $scope.selectedId.push(data.id);
+                        $scope.choseArr.push({id: data.id});//截取id {{id:''}}
+                        $scope.choseArrStr.push(data.id);
+                    }
+                });
+            } else {
+                $scope.x = false;
+                $scope.choseArrStr = [];
+                $scope.choseArr = [];
+                $scope.selectedId = [];
+                //$scope.choseArr.length = 0;//清空数组
+            }
+            flag = 'a';//全选状态
+        };
+        //数组根据某个值增删
+        var SelectedUpdateId = function (id, action) {
+            if (action == 'add' && $scope.selectedId.indexOf(id) == -1) {
+                $scope.selectedId.push(id);
+                $scope.choseArr.push({id: id});
+            }
+            if (action == 'remove' && $scope.selectedId.indexOf(id) != -1) {
+                var idx = $scope.selectedId.indexOf(id);
+                $scope.selectedId.splice(idx, 1);
+                $scope.choseArr.splice(idx, 1);
+            }
+        };
+        ////单选或者多选
+        $scope.chk = function (z, x, $event) {
+            var checkbox = $event.target;//获取当前this
+            var action = (checkbox.checked ? 'add' : 'remove');
+            if (flag == 'a') {//在全选的基础上操作
+                str = $scope.choseArrStr.join(',') + ',';//数组转字符串
+                //console.log('全选的基础上取消单个');
+                SelectedUpdateId(z.id, action);
+                //$scope.isChecked = false;
+            }
+            if (x == true) {//选中
+                str = str + z.id + ',';
+                //console.log('选中单个');
+                //console.log(z);//obj选中的单条数据
+                //console.log(x);//true
+                SelectedUpdateId(z.id, action);
+            } else {
+                str = str.replace(z.id + ',', '');//取消选中
+                //console.log('取消单个选中');
+                SelectedUpdateId(z.id, action);
+            }
+            $scope.choseArrStr = (str.substr(0, str.length - 1)).split(',');
+            //判断显示全选
+            //console.log($scope.choseArr.length);
+            //console.log($scope.arrData.length);//table数据总数
+            if ($scope.choseArr.length == $scope.arrData.length) {
+                $scope.master = true;
+                flag = 'a';//全选状态
+            }else {
+                //$scope.master = false;
+                flag = '';//取消全选状态
+            }
+        };
+
+        //批量删除
+        $scope.BatchDelete = function () {
+            if ($scope.choseArr[0] == "" || $scope.choseArr.length == 0) {//没有选择一个的时候提示
+                alert("请至少选中一条数据在操作！");
+                return;
+            }
+            var con = $window.confirm("确定要删除吗?");
+            if (con == true) {
+                for (var i = 0; i < $scope.choseArr.length; i++) {
+                    console.log($scope.choseArr[i]);//遍历选中的id
+                }
+                alert("已删除");
+                //传当前id后台删除
+            } else {
+                alert("不删除");
+            }
+        };
+    }])
+</script>
+</body>
