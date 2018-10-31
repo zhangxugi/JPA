@@ -10,36 +10,34 @@
 <br/>
 <h1>用户列表</h1>
 <br/><br/>
-<div class="with:80%">
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th>id</th>
-            <th>Username</th>
-            <th>Password</th>
-            <th>Age</th>
-            <th>Edit</th>
-            <th>Delete</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!--  <tr  th:each="users:${list}">没有分页，下面是带有分页-->
-        <tr th:each="users : ${page.content}">
-            <th scope="row" th:text="${users.id}">1</th>
-            <td th:text="${users.username}">neo</td>
-            <td th:text="${users.password}">Otto</td>
-            <td th:text="${users.age}">6</td>
-            <td><a th:href="@{/toEdit(id=${users.id})}">edit</a></td>
-            <td><a th:href="@{/delete(id=${users.id})}">delete</a></td>
-        </tr>
-        </tbody>
-    </table>
-    <div>
-        <a th:href="@{/fenye(start=0)}">[首页]</a>&nbsp;&nbsp;
-        <a th:if="${not page.isFirst()}" th:href="@{/fenye(start=${page.number-1})}">[上页]</a>&nbsp;&nbsp;
-        <a th:if="${not page.isLast()}" th:href="@{/fenye(start=${page.number+1})}">[下页]</a>&nbsp;&nbsp;
-        <a th:href="@{/fenye(start=${page.totalPages-1})}">[末页]</a>
-    </div>
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th>id</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Age</th>
+        <th>Edit</th>
+        <th>Delete</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!--  <tr  th:each="users:${list}">没有分页，下面是带有分页-->
+    <tr th:each="users : ${page.content}">
+        <th scope="row" th:text="${users.id}"></th>
+        <td th:text="${users.username}"></td>
+        <td th:text="${users.password}"></td>
+        <td th:text="${users.age}">6</td>
+        <td><a th:href="@{/toEdit(id=${users.id})}">edit</a></td>
+        <td><a th:href="@{/delete(id=${users.id})}">delete</a></td>
+    </tr>
+    </tbody>
+</table>
+<div>
+    <a th:href="@{/fenye(start=0)}">[首页]</a>&nbsp;&nbsp;
+    <a th:if="${not page.isFirst()}" th:href="@{/fenye(start=${page.number-1})}">[上页]</a>&nbsp;&nbsp;
+    <a th:if="${not page.isLast()}" th:href="@{/fenye(start=${page.number+1})}">[下页]</a>&nbsp;&nbsp;
+    <a th:href="@{/fenye(start=${page.totalPages-1})}">[末页]</a>
 </div>
 <div class="form-group">
     <div class="col-sm-2 control-label">
